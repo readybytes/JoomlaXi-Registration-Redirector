@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<install version="1.5" type="plugin" group="system">
+  <name>JoomlaXi Registration Redirector</name>
+  <version>2.0.17</version>
+  <creationDate>Dec 2008</creationDate>
+  <author>Team JoomlaXi</author>
+  <authorEmail>team@readybytes.in</authorEmail>
+  <authorUrl>http://www.joomlaxi.com/</authorUrl>
+  <copyright>Copyright (C) 2005 - 2012 Open Source Matters. All rights reserved.</copyright>
+  <license>This extension is released under the GNU/GPL License</license>
+  <description> JoomlaXi Registration Redirector should be used to redirect registration requests from the joomla core system to Jom Social. To setup a menu which links to user profile, use a link to profile without user id.</description>
+  <files>  	
+	<filename plugin="jxi_reg_redirect">jxi_reg_redirect.php</filename>
+	<filename>index.html</filename>
+  </files>
+  <params>		
+		<param name="redirectto" type="list" default="1" label="Route or Redirect all registrations to" description="Registration redirection from any registration to selected form the list.">
+			<option value="1">None</option>
+			<option value="2">Jomsocial</option>
+			<option value="3">Core Joomla</option>
+			<option value="4">Community Builder</option>
+			<option value="5">Virtue Mart</option>
+			<option value="6">OSE</option>
+			<option value="7">Custom URL</option>
+		</param>
+		<param name="customUrl" type="text" default="" lable="Custom URL" description="Registration redirection to this URL when custom URL is selected" />
+		<param name="needLangCode" type="radio" default="0" label="Use Multiple Language " description="If your site use multiple language then set this option to yes, and use the langauge code in next option.">
+			<option value="1">Yes</option>
+			<option value="0">No</option>
+		</param>
+		<param name="LangCode" type="text" default="NONE" label="Language Code" description="If your site use multiple language then set the langauge here. This will add language into URL">
+		</param>
+	</params>
+</install>
