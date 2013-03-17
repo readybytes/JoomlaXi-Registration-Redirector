@@ -1,109 +1,117 @@
 <?php
-/**
- * Registration Redirector for Jom Social 1.5.x
-   (C) JoomlaXI.com
- **/
-defined('_JEXEC') or die('Restricted access to this plugin'); 
-define('XI_RR_JOMSOCIAL', 2);
-define('XI_CORE', 3);
-define('XI_COMMBUILDER', 4); 
-define('XI_VIRTUEMART', 5);
-define('XI_OSE', 6);
-define('XI_CUSTOM', 7);
+/*
+* Author 	: Team JoomlaXi @ Ready Bytes Software Labs Pvt. Ltd.
+* Email 	: team@readybytes.in
+* License 	: GNU-GPL V2
+* (C) www.joomlaxi.com
+*/
 
-$mainframe->registerEvent( 'onAfterRoute', 'redir' );
 
-function redir()
+// no direct access
+defined( '_JEXEC' ) or die( 'Restricted access' );
+
+jimport('joomla.plugin.plugin' );
+//jimport('joomla.filesystem.file');
+//jimport('joomla.filesystem.folder' );
+
+	
+class plgSystemJxi_reg_redirect extends JPlugin  
 {
-	global $mainframe;
-	$option = JRequest::getCmd('option');
-	$task = JRequest::getCmd('task');
-	$view = JRequest::getCmd('view');
-	$userid= JRequest::getVar('userid','0','GET');
-	$page=  JRequest::getCmd('page');
-	// get plugin info
-	$plugin =& JPluginHelper::getPlugin('system', 'js_regredirect');
- 	$params = new JParameter($plugin->params);
-	
- 	//parameters to get where to go
-	$redirectto		= $params->get('redirectto', 1);
-	
-	$needLangCode = $params->get('needLangCode', 0);
-	$LangCode = $params->get('LangCode', 0);
-	
-	// if task exist then it must be register
-	if($task && $task !='register')
-		return;
-		
-	// View OR task should be register at least 
-	if($view != 'register' && $task !='register' && $page !='shop.registration' )
-		return;
-		
-	//index.php?option=com_registration&view=register
-	if($option == 'com_community' || $option == 'com_user' || $option == 'com_comprofiler' || $option == 'com_registration' || $option == 'com_virtuemart'  ||$option == 'com_osemsc')
+	/**
+	 * return available Joomla Registration system
+	 * retun : Array('option'=>array(req_vars))
+	 */
+	private static function available_registration_system() 
 	{
-		$Lang_URL =''; 
-		if($needLangCode && $LangCode)
-			$Lang_URL .= "&lang=".$LangCode;
-			
-		switch($redirectto)
-		{
-			case XI_RR_JOMSOCIAL :	
-				if($option == 'com_community')
-					return;
-					
-				$toURL = "index.php?option=com_community&view=register".$Lang_URL;
-				require_once (JPATH_SITE.DS.'components'.DS.'com_community'.DS.'libraries'.DS.'core.php');
-				$mainframe->redirect(CRoute::_($toURL,false));
-				return;
-
-			case XI_CORE :
-				if($option == 'com_user' || $option == 'com_registration')
-					return;	
-								
-				$toURL = "index.php?option=com_user&view=register".$Lang_URL;
-				$mainframe->redirect(JRoute::_($toURL,false));
-				return;
-
-			case XI_COMMBUILDER :
-				if($option == 'com_comprofiler')
-					return;	
-								
-				$toURL = "index.php?option=com_comprofiler&view=register".$Lang_URL;
-				$mainframe->redirect(JRoute::_($toURL,false));
-				return;
-			
-			case XI_VIRTUEMART :
-				if($option == 'com_virtuemart')
-					return;	
-								
-				$toURL = "index.php?option=com_virtuemart&page=shop.registration".$Lang_URL;
-				$mainframe->redirect(JRoute::_($toURL,false));
-				return;
-
-			case XI_OSE :
-					if ($option == 'com_osemsc')
-						return;
-
-					$toURL = "index.php?option=com_osemsc&view=register" . $Lang_URL;
-					$mainframe->redirect(JRoute :: _($toURL, false));
-					return;
-
-			case XI_CUSTOM :	
-				$custom = $params->get('customUrl');		
-				if(empty($custom))
-					$custom = 'index.php';
-
-				$toURL = $custom.$Lang_URL;
-				// Here a issue is in JRoute, so we need to put JURI
-				$mainframe->redirect(JRoute::_(JURI::root().DS.$toURL,false));
-				return;
-
-			default :
-				return;
-		}
+		return 
+				Array(
+						'com_users' 		=> Array ('view' => 'registration'),
+						'com_community'		=> Array ('view' => 'register'),
+						'com_comprofiler' 	=> Array ('view' => 'register'),
+//						'com_registration' 	=> Array ('view' => 'register'),
+						'com_osemsc' 		=> Array ('view' => 'register'),
+						'com_virtuemart'	=> Array ('page' => 'shop.registration')
+					 );
 	}
 	
-	return;		
-	
+	function onAfterRoute()
+	{
+		$app = JFactory::getApplication();
+		
+		//Don't required on back-end
+		if($app->isAdmin()) {
+			return true;
+		}
+		
+		//plugin params
+		$redirect_to		= $this->params->get('redirectto');
+		$need_lang_code 	= $this->params->get('needLangCode', 0);
+		$lang_code			= $this->params->get('LangCode', 0);
+		
+		// no need to any redirection
+		if(empty($redirect_to)) {
+			return true;
+		}
+		
+		$input = $app->input;
+		// get url variables
+		$option 	= $input->get('option');
+//		$task 		= $input->get('task');
+//		$view 		= $input->get('view');
+//		$userid		= $input->get('userid','0','GET');
+//		$page		=  $input->get('page');
+
+		// if you are redircting from JXI redirector or already use default registration system then no need to redirection
+		if ($option == $redirect_to) {
+			return true;
+		}
+		
+
+		$registration_system = self::available_registration_system();
+
+		// check current req is registration or not
+		$flag = false;
+		foreach ($registration_system as $system => $request_var) {
+			if ($system == $option) {
+				foreach ($request_var as $key =>$value) {
+					if($value != $input->get($key)) {
+						$flag = false;
+						break;
+					}
+					$flag = true;
+				}
+				break;
+			}
+		}
+
+		// If any specified language required
+		$lang_url =''; 
+		if($need_lang_code && $lang_code ) {
+			$lang_url .= "&lang=".$LangCode;
+		}
+		
+		if($flag) {
+			// if redirection required to custom url 
+			if('custom' == $redirect_to ) {
+				$url = $this->params->get('customUrl');
+				if(empty($url)) {
+					$url= 'index.php';
+				}
+				// Here a issue is in JRoute, so we need to put JURI
+				$app->redirect(JRoute::_(JURI::root().$url.$lang_url, false));
+			}
+			
+			
+			// build redirect url
+			$query_data = @$registration_system[$redirect_to];
+			
+			if(JDEBUG  && !$query_data) {
+				$app->redirect('index.php', 'JoomlaXi Redirector :: Proper redirection does not available.');
+			}
+			
+			$url = "index.php?option=$redirect_to&".http_build_query($query_data);
+			$app->redirect($url);
+		}
+		return true;		
+	}
 }
