@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <install version="1.5" type="plugin" group="system">
   <name>JoomlaXi Registration Redirector</name>
-  <version>2.0.17</version>
+  <version>2.2</version>
   <creationDate>Dec 2008</creationDate>
   <author>Team JoomlaXi</author>
   <authorEmail>team@readybytes.in</authorEmail>
